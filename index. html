@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Message</title>
+</head>
+<body>
+    <p>Dear Anup Bhai,</p>
+    <p>Pora sunai abr mon dao</p>
+    <p>Necha pw r link delm vlo kora class ta kor</p>
+    <p>Click the link Below:</p>
+    <a href="https://youtube.com" onclick="alert('This is a placeholder link! Replace it with a valid URL.')">https://pwlogin</a>
+</body>
+</html>
