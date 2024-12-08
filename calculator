@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Scientific Calculator</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.10.0/math.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f0f2f5;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .calculator {
+      background: #ffffff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      width: 400px;
+    }
+    .display {
+      width: 100%;
+      height: 60px;
+      font-size: 1.5rem;
+      margin-bottom: 20px;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      text-align: right;
+      background-color: #f9f9f9;
+    }
+    .buttons {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
+    }
+    button {
+      padding: 12px;
+      font-size: 1rem;
+      border: none;
+      border-radius: 5px;
+      background-color: #007BFF;
+      color: white;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    button.operator {
+      background-color: #28a745;
+    }
+    button.function {
+      background-color: #17a2b8;
+    }
+    button.clear {
+      background-color: #dc3545;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+<body>
+  <div class="calculator">
+    <input type="text" id="display" class="display" readonly>
+    <div class="buttons">
+      <!-- Numbers -->
+      <button onclick="append('7')">7</button>
+      <button onclick="append('8')">8</button>
+      <button onclick="append('9')">9</button>
+      <button class="operator" onclick="append('/')">÷</button>
+      <button class="clear" onclick="clearDisplay()">C</button>
+      <button onclick="append('4')">4</button>
+      <button onclick="append('5')">5</button>
+      <button onclick="append('6')">6</button>
+      <button class="operator" onclick="append('*')">×</button>
+      <button onclick="append('^')">^</button>
+      <button onclick="append('1')">1</button>
+      <button onclick="append('2')">2</button>
+      <button onclick="append('3')">3</button>
+      <button class="operator" onclick="append('-')">−</button>
+      <button class="operator" onclick="append('0')">0</button>
+      <button onclick="append('.')">.</button>
+      <button class="operator" onclick="append('+')">+</button>
+      <button class="operator" onclick="calculate()">=</button>
+
+      <!-- Functions -->
+      <button class="function" id="func1" onclick="storeFunction('sin')">sin</button>
+      <button class="function" id="func2" onclick="storeFunction('cos')">cos</button>
+      <button class="function" id="func3" onclick="storeFunction('tan')">tan</button>
+      <button class="function" onclick="storeFunction('sqrt')">√</button>
+      <button class="function" id="toggleTrig" onclick="toggleTrigFunctions()">Trig ↔ Reciprocal</button>
+    </div>
+  </div>
+
+  <script>
+    const display = document.getElementById('display');
+    let pendingFunction = null; // To store the selected function
+    let isReciprocal = false; // Toggle state for reciprocal functions
+
+    // Append value to the display
+    function append(value) {
+      display.value += value;
+    }
+
+    // Clear the display
+    function clearDisplay() {
+      display.value = '';
+      pendingFunction = null; // Reset stored function
+    }
+
+    // Store the selected mathematical function and show it on the display
+    function storeFunction(func) {
+      pendingFunction = func;
+      display.value = `${func}(`; // Show the function on the display
+    }
+
+    // Calculate the result
+    function calculate() {
+      try {
+        let value = parseFloat(display.value.replace(/[^\d.-]/g, '')); // Extract the number
+        if (pendingFunction) {
+          switch (pendingFunction) {
+            case 'sin':
+              display.value = math.sin(math.unit(value, 'deg')).toFixed(4);
+              break;
+            case 'cos':
+              display.value = math.cos(math.unit(value, 'deg')).toFixed(4);
+              break;
+            case 'tan':
+              display.value = math.tan(math.unit(value, 'deg')).toFixed(4);
+              break;
+            case 'cosec':
+              display.value = (1 / math.sin(math.unit(value, 'deg'))).toFixed(4);
+              break;
+            case 'sec':
+              display.value = (1 / math.cos(math.unit(value, 'deg'))).toFixed(4);
+              break;
+            case 'cot':
+              display.value = (1 / math.tan(math.unit(value, 'deg'))).toFixed(4);
+              break;
+            case 'sqrt':
+              display.value = math.sqrt(value).toFixed(4);
+              break;
+          }
+          pendingFunction = null; // Reset the function after calculation
+        } else {
+          display.value = math.evaluate(display.value); // Evaluate for normal expressions
+        }
+      } catch {
+        display.value = 'Error';
+      }
+    }
+
+    // Toggle between trigonometric and reciprocal functions
+    function toggleTrigFunctions() {
+      isReciprocal = !isReciprocal; // Switch toggle state
+
+      // Update button labels and their functionality
+      document.getElementById('func1').textContent = isReciprocal ? 'cosec' : 'sin';
+      document.getElementById('func1').setAttribute('onclick', `storeFunction('${isReciprocal ? 'cosec' : 'sin'}')`);
+
+      document.getElementById('func2').textContent = isReciprocal ? 'sec' : 'cos';
+      document.getElementById('func2').setAttribute('onclick', `storeFunction('${isReciprocal ? 'sec' : 'cos'}')`);
+
+      document.getElementById('func3').textContent = isReciprocal ? 'cot' : 'tan';
+      document.getElementById('func3').setAttribute('onclick', `storeFunction('${isReciprocal ? 'cot' : 'tan'}')`);
+    }
+  </script>
+</body>
+</html>
