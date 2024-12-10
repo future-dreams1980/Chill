@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Enhanced Scientific Calculator</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.10.0/math.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f0f2f5;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .container {
+      width: 500px;
+      background: #ffffff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    }
+    .display {
+      width: 100%;
+      height: 60px;
+      font-size: 1.5rem;
+      margin-bottom: 20px;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      text-align: right;
+      background-color: #f9f9f9;
+    }
+    .buttons {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+    button {
+      padding: 12px;
+      font-size: 1rem;
+      border: none;
+      border-radius: 5px;
+      background-color: #007BFF;
+      color: white;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    button.function {
+      background-color: #17a2b8;
+    }
+    button.clear {
+      background-color: #dc3545;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    .secondary-page {
+      display: none;
+    }
+    .secondary-page.active {
+      display: block;
+    }
+    .history {
+      margin-top: 20px;
+      padding: 10px;
+      background: #f9f9f9;
+      border-radius: 5px;
+      max-height: 150px;
+      overflow-y: auto;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <input type="text" id="display" class="display" readonly>
+    <div class="buttons">
+      <button onclick="append('9')">9</button>
+      <button onclick="append('8')">8</button>
+      <button onclick="append('7')">7</button>
+      <button class="clear" onclick="clearDisplay()">C</button>
+      <button onclick="append('6')">6</button>
+      <button onclick="append('5')">5</button>
+      <button onclick="append('4')">4</button>
+      <button onclick="erase()">Erase</button>
+      <button onclick="append('1')">1</button>
+      <button onclick="append('2')">2</button>
+      <button onclick="append('3')">3</button>
+      <button onclick="calculate()">=</button>
+      <button style="grid-column: span 2;" onclick="append('0')">0</button>
+      <button onclick="append('.')">.</button>
+      <button onclick="append('+')">+</button>
+      <button onclick="append('-')">−</button>
+      <button onclick="append('*')">×</button>
+      <button onclick="append('/')">÷</button>
+      <button onclick="append(',')">,</button>
+     <button onclick="append('^')">^</button>           <!-- Added exponentiation button -->
+      <button class="function" onclick="calculateFunction('log')">log</button>
+      <button class="function" onclick="calculateFunction('ln')">ln</button>
+      <button class="function" onclick="calculateFunction('sqrt')">√</button>
+      <button class="function" onclick="calculateFunction('nPr')">nPr</button>
+      <button class="function" onclick="calculateFunction('nCr')">nCr</button>
+      <button class="function" onclick="calculateFunction('sin')">sin</button>
+      <button class="function" onclick="calculateFunction('cos')">cos</button>
+      <button class="function" onclick="calculateFunction('tan')">tan</button>
+      <button class="function" onclick="solveQuadratic()">Quad</button>
+      <button class="function" onclick="switchPage()">Switch Page</button>
+       </div>
+  <div class="history" id="history">
+    <strong>History:</strong>
+    <div id="historyContent"></div>
+    <button onclick="clearHistory()">Clear History</button>
+  </div>
+    </div>
+    <div id="secondaryPage" class="secondary-page">
+      <h3>Unit Conversion and Extra Features</h3>
+      <div>
+        <label>Pressure Conversion:</label>
+        <input type="number" id="pressureInput" placeholder="Enter value in Pa">
+        <button onclick="convertPressure()">Convert</button>
+        <div id="pressureResult"></div>
+      </div>
+      <div>
+        <label>Currency Conversion:</label>
+        <select id="currencyFrom">
+          <option value="USD">USD</option>
+          <option value="EUR">EUR</option>
+          <option value="INR">INR</option>
+          <option value="GBP">GBP</option>
+          <option value="AUD">AUD</option>
+          <option value="CAD">CAD</option>
+        </select>
+        to
+        <select id="currencyTo">
+          <option value="USD">USD</option>
+          <option value="EUR">EUR</option>
+          <option value="INR">INR</option>
+          <option value="GBP">GBP</option>
+          <option value="AUD">AUD</option>
+          <option value="CAD">CAD</option>
+        </select>
+        <input type="number" id="currencyInput" placeholder="Enter amount">
+        <button onclick="convertCurrency()">Convert</button>
+        <div id="currencyResult"></div>
+      </div>
+    </div>
+  </div>
+  <script>
+    const display = document.getElementById('display');
+    const historyContent = document.getElementById('historyContent');
+
+    function append(value) {
+      display.value += value;
+    }
+
+    function clearDisplay() {
+      display.value = '';
+    }
+
+    function erase() {
+      display.value = display.value.slice(0, -1);
+    }
+
+    function calculate() {
+      try {
+        const result = math.evaluate(display.value);
+        display.value = result;
+        saveToHistory(`${display.value} = ${result}`);
+      } catch {
+        display.value = 'Error';
+      }
+    }
+
+    function calculateFunction(func) {
+      try {
+        let result;
+        if (func === 'sin') result = math.sin(math.unit(parseFloat(display.value), 'deg'));
+        else if (func === 'cos') result = math.cos(math.unit(parseFloat(display.value), 'deg'));
+        else if (func === 'tan') result = math.tan(math.unit(parseFloat(display.value), 'deg'));
+        else if (func === 'log') result = math.log10(parseFloat(display.value));
+        else if (func === 'ln') result = math.log(parseFloat(display.value));
+        else if (func === 'sqrt') result = math.sqrt(parseFloat(display.value));
+        else if (func === 'nPr') {
+          const [n, r] = display.value.split(',').map(Number);
+          result = math.factorial(n) / math.factorial(n - r);
+        } else if (func === 'nCr') {
+          const [n, r] = display.value.split(',').map(Number);
+          result = math.factorial(n) / (math.factorial(r) * math.factorial(n - r));
+        }
+        display.value = result.toFixed(4);
+        saveToHistory(`${func}(${display.value}) = ${result}`);
+      } catch {
+        display.value = 'Error';
+      }
+    }
+
+    function solveQuadratic() {
+      const coeffs = display.value.split(',').map(Number);
+      const [a, b, c] = coeffs;
+      const d = b ** 2 - 4 * a * c;
+      if (d < 0) display.value = 'Imaginary Roots';
+      else {
+        const r1 = (-b + Math.sqrt(d)) / (2 * a);
+        const r2 = (-b - Math.sqrt(d)) / (2 * a);
+        display.value = `Roots: ${r1.toFixed(2)}, ${r2.toFixed(2)}`;
+        saveToHistory(display.value);
+      }
+    }
+
+    function convertCurrency() {
+      const from = document.getElementById('currencyFrom').value;
+      const to = document.getElementById('currencyTo').value;
+      const amount = parseFloat(document.getElementById('currencyInput').value);
+
+      // Example rates (real rates should be fetched from an API)
+      const rates = {
+        USD: { EUR: 0.9, INR: 82, GBP: 0.75, AUD: 1.5, CAD: 1.35 },
+        EUR: { USD: 1.1, INR: 91, GBP: 0.83, AUD: 1.67, CAD: 1.5 },
+        INR: { USD: 0.012, EUR: 0.011, GBP: 0.0092, AUD: 0.018, CAD: 0.016 },
+        GBP: { USD: 1.33, EUR: 1.2, INR: 108, AUD: 2.02, CAD: 1.8 },
+        AUD: { USD: 0.67, EUR: 0.6, INR: 54, GBP: 0.5, CAD: 0.9 },
+        CAD: { USD: 0.74, EUR: 0.67, INR: 61, GBP: 0.56, AUD: 1.1 }
+      };
+
+      const rate = rates[from][to];
+      const convertedAmount = (amount * rate).toFixed(2);
+      document.getElementById('currencyResult').textContent = `${amount} ${from} = ${convertedAmount} ${to}`;
+    }
+
+    function saveToHistory(entry) {
+      const div = document.createElement('div');
+      div.textContent = entry;
+      historyContent.appendChild(div);
+    }
+
+    function clearHistory() {
+      historyContent.innerHTML = '';
+    }
+
+    function switchPage() {
+      document.getElementById('secondaryPage').classList.toggle('active');
+    }
+  </script>
+</body>
+</html>
